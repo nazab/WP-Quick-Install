@@ -4,11 +4,18 @@ set_time_limit(0);
 // On check si on a un fichier de pré-configuration
 $data = array();
 if( file_exists( 'data.ini' ) ) {
-	$data = json_encode( parse_ini_file( 'data.ini' ) );
+	$ini_file = parse_ini_file( 'data.ini' );
+	$data = json_encode( $ini_file );
 }
 
 // On ajoute  ../ au directory
 $directory = !empty( $_POST['directory'] ) ? '../' . $_POST['directory'] . '/' : '../';
+
+if(!empty($_POST['password']) && $_POST['password'] == $ini_file['password']) {
+	setcookie('wp_quick_install_logged','1');
+	header('Location: http://'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI']);
+	die();
+}
 
 // Allez, maintenant on commence les choses sérieuses haha =D
 if( isset( $_GET['action'] ) ) {
@@ -507,7 +514,8 @@ if( isset( $_GET['action'] ) ) {
 
 	} // switch
 } // if isset( $_GET['action'] )
-else { ?>
+else { 
+?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="fr">
 	<head>
@@ -539,9 +547,23 @@ else { ?>
 				<div id="errors" class="alert alert-error" style="display:none;">
 					<strong>Attention !</strong>
 				</div>
-
-				<h1>Avertissement</h1>
-				<p>Ce fichier doit obligatoirement se trouver dans le dossier <em>wp-quick-install</em>. Il ne doit pas être présent à la racine du projet ou de votre FTP.</p>
+<?php
+if(empty($_COOKIE['wp_quick_install_logged'])) {
+	?>
+	<h1>Espace protégé par un mot de passe</h1>
+					<table class="form-table">
+					<tr>
+						<th scope="row"><label for="dbname">Mot de passe</label></th>
+						<td><input name="password" id="password" type="text" value="" class="required" /></td>
+						<td><input type="submit"/></td>
+					</tr>
+					</table>
+			</form>
+	</body></html>
+	<?php
+	die();
+}
+?>				
 
 				<h1>Informations de la base de données</h1>
 				<p>Vous devez saisir ci-dessous les détails de connexion à votre base de données. Si vous ne les connaissez pas, contactez votre hébergeur.</p>
